@@ -1,0 +1,17 @@
+version 5.249.0
+source https://api.nuget.org/v3/index.json
+framework: netcoreapp3.1
+storage: none
+
+nuget FSharp.Core
+nuget Dapper.FSharp
+nuget Fake.Core.CommandLineParsing
+
+group Build
+    source https://api.nuget.org/v3/index.json
+    framework: netstandard2.0
+    storage: none
+
+    nuget Fake.IO.FileSystem
+    nuget Fake.Core.Target
+    nuget Fake.DotNet.Cli
