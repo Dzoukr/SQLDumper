@@ -4,8 +4,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="MSSQL.fs" />
     <Compile Include="SQLDumper.fs" />
+    <Compile Include="MSSQL.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

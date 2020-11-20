@@ -1,2 +1,3 @@
 FSharp.Core
 Fake.Core.CommandLineParsing
+Microsoft.Data.SqlClient

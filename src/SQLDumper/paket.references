@@ -1,2 +1,4 @@
 FSharp.Core
-Dapper.FSharp
+Dapper
+TaskBuilder.fs
+Microsoft.Data.SqlClient
