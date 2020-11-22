@@ -34,35 +34,40 @@ module Tools =
         if result.ExitCode <> 0 then failwithf "'dotnet %s' failed in %s" cmd workingDir
 
 let librarySrcPath = "src" </> "SQLDumper"
+let toolSrcPath = "src" </> "SQLDumper.Tool"
 
-Target.create "Clean" (fun _ ->
+let clean proj =
     [
-        librarySrcPath </> "bin"
-        librarySrcPath </> "obj"
+        proj </> "bin"
+        proj </> "obj"
     ]
     |> Shell.deleteDirs
-)
 
-Target.create "Pack" (fun _ ->
-    Tools.dotnet "restore --no-cache" librarySrcPath
-    Tools.dotnet "pack -c Release" librarySrcPath
-)
+let pack proj =
+    Tools.dotnet "restore --no-cache" proj
+    Tools.dotnet "pack -c Release" proj
 
-Target.create "Publish" (fun _ ->
+let publish proj =
     let nugetKey =
         match Environment.environVarOrNone "NUGET_KEY" with
         | Some nugetKey -> nugetKey
         | None -> failwith "The Nuget API key must be set in a NUGET_KEY environmental variable"
     let nupkg =
-        Directory.GetFiles(librarySrcPath </> "bin" </> "Release")
+        Directory.GetFiles(proj </> "bin" </> "Release")
         |> Seq.head
         |> Path.GetFullPath
-    Tools.dotnet (sprintf "nuget push %s -s nuget.org -k %s" nupkg nugetKey) librarySrcPath
-)
+    Tools.dotnet (sprintf "nuget push %s -s nuget.org -k %s" nupkg nugetKey) proj
 
-//"Test" ==> "Pack"
-//"Test" ==> "Publish"
-"Clean" ==> "Pack" ==> "Publish"
+Target.create "CleanLibrary" (fun _ -> librarySrcPath |> clean)
+Target.create "PackLibrary" (fun _ -> librarySrcPath |> pack)
+Target.create "PublishLibrary" (fun _ -> librarySrcPath |> publish)
 
-//Target.runOrDefaultWithArguments "Test"
-Target.runOrDefaultWithArguments "Pack"
+"CleanLibrary" ==> "PackLibrary" ==> "PublishLibrary"
+
+Target.create "CleanTool" (fun _ -> toolSrcPath |> clean)
+Target.create "PackTool" (fun _ -> toolSrcPath |> pack)
+Target.create "PublishTool" (fun _ -> toolSrcPath |> publish)
+
+"CleanTool" ==> "PackTool" ==> "PublishTool"
+
+Target.runOrDefaultWithArguments "CleanLibrary"

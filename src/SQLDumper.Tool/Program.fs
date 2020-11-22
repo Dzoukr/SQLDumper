@@ -2,35 +2,67 @@
 
 open System
 open Fake.Core
+open SQLDumper
 
 // CLI interface definition
-let cli = """
-usage: dotnet sqldump [options]
+let cli =
+    """
+USAGE:
+    sqldump (-h | --help)
+    sqldump <connectionstring> <outputfile> [options]
 
-options:
- -c --connectionstring <string>        Connection string
- -o --output <filename>                Output file path
+OPTIONS [options]:
+    -h --help                          Shows help
+    --usego <usego>                    Use GO statements [default: True]
+    --statements <statements>          Number of statements in transaction [default: 1000]
+    --rows <rows>                      Number of rows in transaction [default: 100]
+    --ignore <tables>                  Tables to ignore when doing SQL dump (use comma for more tables separation)
 """
 
-// helper module to read easily required/optional arguments
+[<RequireQualifiedAccess>]
 module DocoptResult =
-    let getArgumentOrDefault arg def map =
-        map
-        |> DocoptResult.tryGetArgument arg
-        |> Option.defaultValue def
-
     let getArgument arg map =
         map
         |> DocoptResult.tryGetArgument arg
-        |> Option.defaultWith (fun _ ->
-            failwithf "Missing required argument %s.%sPlease use this CLI interface: %s" arg Environment.NewLine cli)
+        |> Option.defaultWith (fun _ -> failwithf "Missing required argument %s." arg)
 
 [<EntryPoint>]
 let main argv =
-    let cliArgs = Docopt(cli).Parse(argv)
-    //let connectionString = cliArgs |> DocoptResult.getArgument "-c"
-    //let outputFile = cliArgs |> DocoptResult.getArgument "-o"
-
-
-    printfn "Hello World from F#!"
-    0 // return an integer exit code
+    try
+        let cliArgs = Docopt(cli).Parse(argv)
+        if cliArgs |> DocoptResult.hasFlag "-h"
+        then
+            printfn "%s" cli
+            0
+        else
+            let connString = cliArgs |> DocoptResult.getArgument "<connectionstring>"
+            let outputFile = cliArgs |> DocoptResult.getArgument "<outputfile>"
+            let useGo = cliArgs |> DocoptResult.getArgument "<usego>" |> Boolean.Parse
+            let statements = cliArgs |> DocoptResult.getArgument "<statements>" |> int
+            let rows = cliArgs |> DocoptResult.getArgument "<rows>" |> int
+            let ignores =
+                cliArgs
+                |> DocoptResult.tryGetArgument "<tables>"
+                |> Option.map (fun x -> x.Split(",", StringSplitOptions.RemoveEmptyEntries))
+                |> Option.map Array.toList
+                |> Option.defaultValue []
+            try
+                SQLDumper.init connString
+                |> SQLDumper.useGoStatements useGo
+                |> SQLDumper.statementsInTransaction statements
+                |> SQLDumper.rowsInStatement rows
+                |> SQLDumper.ignoreTables ignores
+                |> MSSQL.dumpToFile outputFile
+                |> Async.AwaitTask
+                |> Async.RunSynchronously
+                0
+            with ex ->
+                Console.ForegroundColor <- ConsoleColor.Red
+                eprintfn "Exception occured: %s" ex.Message
+                1
+    with ex ->
+        Console.ForegroundColor <- ConsoleColor.Red
+        printfn "Error while parsing command line, usage is:"
+        printfn "%s" cli
+        eprintfn "Exception occured: %s" ex.Message
+        1

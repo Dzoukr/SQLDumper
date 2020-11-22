@@ -5,6 +5,14 @@
         <TargetFramework>netcoreapp3.1</TargetFramework>
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>sqldump</ToolCommandName>
+        <PackageId>SQLDumper.Tool</PackageId>
+        <Description>Dump your MSSQL library into file or stream</Description>
+        <PackageProjectUrl>https://github.com/Dzoukr/SQLDumper</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/Dzoukr/SQLDumper/blob/master/LICENSE</PackageLicenseUrl>
+        <PackageTags>fsharp;database;mssql;dump;tools</PackageTags>
+        <Authors>Roman Provazník</Authors>
+        <Version>1.0.0-beta1</Version>
+        <PackageReleaseNotes>Initial release</PackageReleaseNotes>
     </PropertyGroup>
 
     <ItemGroup>

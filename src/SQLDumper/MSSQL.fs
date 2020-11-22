@@ -89,7 +89,7 @@ module internal Converters =
 
 let private safeName (n:string) = sprintf "[%s]" n
 
-type ColumnDefinition = {
+type internal ColumnDefinition = {
     Name : string
     DataType : string
     IsSorted : bool
@@ -97,7 +97,7 @@ type ColumnDefinition = {
 }
 
 [<RequireQualifiedAccess>]
-module ColumnDefinition =
+module internal ColumnDefinition =
     let toSelectSql (c:ColumnDefinition) =
         let name = safeName c.Name
         match c.DataType with
@@ -106,14 +106,14 @@ module ColumnDefinition =
 
     let safeName (c:ColumnDefinition) = c.Name |> safeName
 
-type TableDefinition = {
+type internal TableDefinition = {
     Schema : string
     Name : string
     Columns : ColumnDefinition list
 }
 
 [<RequireQualifiedAccess>]
-module TableDefinition =
+module internal TableDefinition =
     let safeFullName (td:TableDefinition) = (safeName td.Schema) + "." + (safeName td.Name)
 
 let private getColumns (conn:IDbConnection) schema name =
@@ -141,15 +141,15 @@ let private getTables (conn:IDbConnection) =
         return tables |> Seq.toList
     }
 
-type Writer = {
+type internal Writer = {
     Go : unit -> Task
     EmptyLine : unit -> Task
     Line : string -> Task
     Append : string -> Task
 }
 
-module Writer =
-    let create (writer:TextWriter) (dump:SQLDump) =
+module internal Writer =
+    let create (writer:TextWriter) (dump:SQLDumper) =
         {
             Go = fun _ -> if dump.UseGoStatements then writer.WriteLineAsync("GO") else Task.CompletedTask
             EmptyLine = writer.WriteLineAsync
@@ -157,7 +157,7 @@ module Writer =
             Append = writer.WriteAsync
         }
 
-let private dumpTable (conn:IDbConnection) (dump:SQLDump) (w:Writer) (table:TableDefinition) =
+let private dumpTable (conn:IDbConnection) (dump:SQLDumper) (w:Writer) (table:TableDefinition) =
     task {
         let tableName = table |> TableDefinition.safeFullName
         let colsSelect = table.Columns |> List.map ColumnDefinition.toSelectSql |> String.concat ", "
@@ -214,8 +214,8 @@ let private dumpTable (conn:IDbConnection) (dump:SQLDump) (w:Writer) (table:Tabl
             do! w.Go()
     }
 
-
-let dumpToWriter (writer:TextWriter) (dump:SQLDump) =
+/// Dump MSSQL database into TextWriter instance
+let dumpToWriter (writer:TextWriter) (dump:SQLDumper) =
     let w = Writer.create writer dump
     task {
         use conn = new SqlConnection(dump.ConnectionString)
@@ -233,7 +233,8 @@ let dumpToWriter (writer:TextWriter) (dump:SQLDump) =
         do! w.Go()
     }
 
-let dumpToFile (filePath:string) (dump:SQLDump) =
+/// Dump MSSQL database into file
+let dumpToFile (filePath:string) (dump:SQLDumper) =
     task {
         use file = File.CreateText(filePath)
         do! dump  |> dumpToWriter file
