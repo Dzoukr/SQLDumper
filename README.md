@@ -55,3 +55,7 @@ OPTIONS [options]:
     --rows <number>                    Number of rows in transaction [default: 100]
     --ignore <tables>                  Tables to ignore when doing SQL dump (use comma for more tables separation)
 ```
+
+## Kudos 👏
+
+Thanks to [@ArtemAvramenko](https://github.com/ArtemAvramenko) for his [SqlDump](https://github.com/ArtemAvramenko/SqlDump) C# library used as reference project for this library.
