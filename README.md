@@ -1,6 +1,6 @@
 ﻿# SQLDumper ![GitHub](https://img.shields.io/github/license/Dzoukr/SQLDumper?style=flat-square) ![Nuget](https://img.shields.io/nuget/v/SQLDumper?label=SQLDumper&style=flat-square) ![Nuget](https://img.shields.io/nuget/v/SQLDumper.Tool?label=SQLDumper.Tool&style=flat-square)
 
-Dump your MSSQL library into file or stream using F# library or .NET CLI tool.
+Dump your MSSQL database into file or stream using F# library or .NET CLI tool.
 
 ## Using F# library
 
