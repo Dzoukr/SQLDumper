@@ -13,9 +13,9 @@ USAGE:
 
 OPTIONS [options]:
     -h --help                          Shows help
-    --usego <usego>                    Use GO statements [default: True]
-    --statements <statements>          Number of statements in transaction [default: 1000]
-    --rows <rows>                      Number of rows in transaction [default: 100]
+    --usego <bool>                     Use GO statements [default: True]
+    --statements <number>              Number of statements in transaction [default: 1000]
+    --rows <number>                    Number of rows in transaction [default: 100]
     --ignore <tables>                  Tables to ignore when doing SQL dump (use comma for more tables separation)
 """
 
@@ -37,12 +37,12 @@ let main argv =
         else
             let connString = cliArgs |> DocoptResult.getArgument "<connectionstring>"
             let outputFile = cliArgs |> DocoptResult.getArgument "<outputfile>"
-            let useGo = cliArgs |> DocoptResult.getArgument "<usego>" |> Boolean.Parse
-            let statements = cliArgs |> DocoptResult.getArgument "<statements>" |> int
-            let rows = cliArgs |> DocoptResult.getArgument "<rows>" |> int
+            let useGo = cliArgs |> DocoptResult.getArgument "--usego" |> Boolean.Parse
+            let statements = cliArgs |> DocoptResult.getArgument "--statements" |> int
+            let rows = cliArgs |> DocoptResult.getArgument "--rows" |> int
             let ignores =
                 cliArgs
-                |> DocoptResult.tryGetArgument "<tables>"
+                |> DocoptResult.tryGetArgument "--ignore"
                 |> Option.map (fun x -> x.Split(",", StringSplitOptions.RemoveEmptyEntries))
                 |> Option.map Array.toList
                 |> Option.defaultValue []
@@ -55,6 +55,9 @@ let main argv =
                 |> MSSQL.dumpToFile outputFile
                 |> Async.AwaitTask
                 |> Async.RunSynchronously
+
+                Console.ForegroundColor <- ConsoleColor.Green
+                printfn "Database successfully dumped into %s" outputFile
                 0
             with ex ->
                 Console.ForegroundColor <- ConsoleColor.Red

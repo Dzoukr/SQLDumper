@@ -198,10 +198,7 @@ let private dumpTable (conn:IDbConnection) (dump:SQLDumper) (w:Writer) (table:Ta
 
             do!
                 table.Columns
-                |> List.mapi (fun i x ->
-                    (x.Name, x.DataType) |> printfn "%A"
-                    x.Converter (reader :?> DbDataReader) i
-                )
+                |> List.mapi (fun i x -> x.Converter (reader :?> DbDataReader) i)
                 |> String.concat ", "
                 |> sprintf "(%s)"
                 |> w.Append
